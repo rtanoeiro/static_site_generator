@@ -49,22 +49,6 @@ def text_node_to_html_node(text_node: TextNode):
         )
 
 
-def split_nodes_delimiter(old_nodes: list[TextNode], delimiter, text_type):
-    new_nodes_list = []
-
-    for node in old_nodes:
-        node_split = node.text.split(delimiter)
-        for index, item in enumerate(node_split):
-            if item == "":
-                continue
-            if index % 2 == 0:
-                new_nodes_list.append(TextNode(f"{item}", TextType.TEXT))
-            else:
-                new_nodes_list.append(TextNode(f"{item}", text_type))
-
-    return new_nodes_list
-
-
 def main():
     object_1 = TextNode("This is a text node", TextType.BOLD, "https://www.boot.dev")
     print(object_1.__repr__())
