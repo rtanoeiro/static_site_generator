@@ -55,7 +55,8 @@ def split_nodes_delimiter(old_nodes: list[TextNode], delimiter, text_type):
     for node in old_nodes:
         node_split = node.text.split(delimiter)
         for index, item in enumerate(node_split):
-            # Only the middle element contains the new text type:
+            if item == "":
+                continue
             if index % 2 == 0:
                 new_nodes_list.append(TextNode(f"{item}", TextType.TEXT))
             else:
