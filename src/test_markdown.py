@@ -3,6 +3,8 @@ from markdown_extract import (
     extract_markdown_images,
     extract_markdown_links,
     split_nodes_delimiter,
+    split_nodes_image,
+    split_nodes_link,
 )
 from textnode import TextNode, TextType
 
@@ -28,6 +30,80 @@ class MarkdownExtractTests(unittest.TestCase):
                 ("to boot dev", "https://www.boot.dev"),
                 ("to youtube", "https://www.youtube.com/@bootdotdev"),
             ],
+        )
+
+    def test_split_image_single(self):
+        node = TextNode(
+            "![image](https://www.example.com/image.png)",
+            TextType.TEXT,
+        )
+        new_nodes = split_nodes_image([node])
+        self.assertListEqual(
+            [
+                TextNode("image", TextType.IMAGE, "https://www.example.com/image.png"),
+            ],
+            new_nodes,
+        )
+
+    def test_split_images(self):
+        node = TextNode(
+            "This is text with an ![image](https://i.imgur.com/zjjcJKZ.png) and another ![second image](https://i.imgur.com/3elNhQu.png)",
+            TextType.TEXT,
+        )
+        new_nodes = split_nodes_image([node])
+        self.assertListEqual(
+            [
+                TextNode("This is text with an ", TextType.TEXT),
+                TextNode("image", TextType.IMAGE, "https://i.imgur.com/zjjcJKZ.png"),
+                TextNode(" and another ", TextType.TEXT),
+                TextNode(
+                    "second image", TextType.IMAGE, "https://i.imgur.com/3elNhQu.png"
+                ),
+            ],
+            new_nodes,
+        )
+
+    def test_split_link_single(self):
+        node = TextNode(
+            "This is my [link](https://www.example.com)",
+            TextType.TEXT,
+        )
+        new_nodes = split_nodes_link([node])
+        print(new_nodes)
+        self.assertListEqual(
+            [
+                TextNode("This is my ", TextType.TEXT),
+                TextNode("link", TextType.LINK, "https://www.example.com"),
+            ],
+            new_nodes,
+        )
+
+    def test_split_only_link(self):
+        node = TextNode(
+            "[link](https://www.example.com)",
+            TextType.TEXT,
+        )
+        new_nodes = split_nodes_link([node])
+        print(new_nodes)
+        self.assertListEqual(
+            [TextNode("link", TextType.LINK, "https://www.example.com")],
+            new_nodes,
+        )
+
+    def test_split_links(self):
+        node = TextNode(
+            "This is my [link](https://www.example.com), hey, and this is [another link](https://www.example2.com)",
+            TextType.TEXT,
+        )
+        new_nodes = split_nodes_link([node])
+        self.assertListEqual(
+            [
+                TextNode("This is my ", TextType.TEXT),
+                TextNode("link", TextType.LINK, "https://www.example.com"),
+                TextNode(", hey, and this is ", TextType.TEXT),
+                TextNode("another link", TextType.LINK, "https://www.example2.com"),
+            ],
+            new_nodes,
         )
 
     def test_split_code_nodes(self):
