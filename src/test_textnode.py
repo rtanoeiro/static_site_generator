@@ -147,5 +147,23 @@ class TestTextNode(unittest.TestCase):
             ],
         )
 
+    def test_split_multiple_bold_nodes(self):
+        node = TextNode(
+            "This is text with a **bold** word, and this is another **bold** word",
+            TextType.TEXT,
+        )
+        new_nodes = split_nodes_delimiter([node], "**", TextType.BOLD)
+        self.assertEqual(
+            new_nodes,
+            [
+                TextNode("This is text with a ", TextType.TEXT),
+                TextNode("bold", TextType.BOLD),
+                TextNode(" word, and this is another ", TextType.TEXT),
+                TextNode("bold", TextType.BOLD),
+                TextNode(" word", TextType.TEXT),
+            ],
+        )
+
+
 if __name__ == "__main__":
     unittest.main()

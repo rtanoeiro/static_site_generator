@@ -48,6 +48,7 @@ def text_node_to_html_node(text_node: TextNode):
             tag="img", value="", props={"src": text_node.url, "alt": text_node.text}
         )
 
+
 def split_nodes_delimiter(old_nodes: list[TextNode], delimiter, text_type):
     new_nodes_list = []
 
@@ -55,12 +56,13 @@ def split_nodes_delimiter(old_nodes: list[TextNode], delimiter, text_type):
         node_split = node.text.split(delimiter)
         for index, item in enumerate(node_split):
             # Only the middle element contains the new text type:
-            if index == 0 or index == len(node_split) -1:
+            if index % 2 == 0:
                 new_nodes_list.append(TextNode(f"{item}", TextType.TEXT))
             else:
-                new_nodes_list.append(TextNode(f"{item}",text_type))
-    
+                new_nodes_list.append(TextNode(f"{item}", text_type))
+
     return new_nodes_list
+
 
 def main():
     object_1 = TextNode("This is a text node", TextType.BOLD, "https://www.boot.dev")
