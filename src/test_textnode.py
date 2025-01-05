@@ -1,6 +1,7 @@
 import unittest
 
-from textnode import TextNode, TextType, text_node_to_html_node, split_nodes_delimiter
+from textnode import TextNode, TextType, text_node_to_html_node
+from markdown_extract import split_nodes_delimiter
 
 
 class TestTextNode(unittest.TestCase):
@@ -92,9 +93,9 @@ class TestTextNode(unittest.TestCase):
         self.assertEqual(html_node.value, "This is a test link")
 
     def test_link_html_node_building(self):
-        text_node = TextNode("This is a test link", TextType.LINK)
+        text_node = TextNode("This is a test link", TextType.LINK, url="www.google.com")
         html_node = text_node_to_html_node(text_node).to_html()
-        self.assertEqual(html_node, "<a>This is a test link</a>")
+        self.assertEqual(html_node, '<a href="www.google.com">This is a test link</a>')
 
     def test_image_html_node(self):
         text_node = TextNode("This is a test image", TextType.IMAGE)
