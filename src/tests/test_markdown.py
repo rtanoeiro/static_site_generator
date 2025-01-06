@@ -6,6 +6,7 @@ from src.markdown_extract import (
     text_to_textnodes,
     markdown_to_blocks,
     block_to_block_type,
+    header_to_html,
     IMAGES_RE,
     LINK_RE,
     BOLD_RE,
@@ -13,6 +14,7 @@ from src.markdown_extract import (
     CODE_RE,
 )
 from src.textnode import TextNode, TextType
+from src.htmlnode import HTMLNode
 
 
 class MarkdownExtractTests(unittest.TestCase):
@@ -310,6 +312,11 @@ class MarkdownExtractTests(unittest.TestCase):
         self.assertEqual(block_to_block_type(list_of_blocks[3]), "unordered_list")
         self.assertEqual(block_to_block_type(list_of_blocks[4]), "unordered_list")
         self.assertEqual(block_to_block_type(list_of_blocks[5]), "ordered_list")
+
+    def test_header_to_html(self):
+        header_1 = "### My Header"
+        html_node = header_to_html(header_1)
+        self.assertEqual(html_node, HTMLNode("h3", "My Header"))
 
 
 if __name__ == "__main__":

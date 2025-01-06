@@ -1,5 +1,6 @@
 import re
 from src.textnode import TextNode, TextType
+from src.htmlnode import HTMLNode
 
 IMAGES_RE = r"!\[(.*?)\]\((.*?)\)"
 LINK_RE = r"\[(.*?)\]\((.*?)\)"
@@ -134,6 +135,39 @@ def block_to_block_type(block: str):
         return "unordered_list"
     if int(block.split(".")[0]):
         return "ordered_list"
+
+
+def markdown_to_html_node(markdown: str):
+    markdown_blocks = markdown_to_blocks(markdown)
+
+    for block in markdown_blocks:
+        block_type = block_to_block_type(block)
+
+
+def header_to_html(block: str):
+    header_size = len(list(filter(lambda x: x == "#", block)))
+    text = block.split(header_size * "#")[1].strip()  # Split after nth #`s
+    return HTMLNode(f"h{header_size}", value=text)
+
+
+def code_to_html(block: str):
+    text = block.split("```")[1].strip()
+    return HTMLNode("code", value=text)
+
+
+def quote_to_html(block: str):
+    text = block.split(">")[1].strip()
+    return HTMLNode("blockquote", value=text)
+
+
+def unordered_list_to_html(block: str):
+    text = block.split("*")[1].strip()
+    return HTMLNode("ul", value=text)
+
+
+def ordered_list_to_html(block: str):
+    text = block.split(".")[1].strip()
+    return HTMLNode("ol", value=text)
 
 
 def text_to_textnodes(text: str):
