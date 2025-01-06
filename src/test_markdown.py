@@ -33,9 +33,7 @@ class MarkdownExtractTests(unittest.TestCase):
 
     def test_single_bold(self):
         node = TextNode("This is a bolded **word**", TextType.TEXT)
-        new_nodes, _ = split_nodes_bold_italic_code(
-            [node], delimiter="**", text_type=TextType.BOLD
-        )
+        new_nodes = split_nodes_bold_italic_code([node])
         self.assertListEqual(
             new_nodes,
             [
@@ -44,11 +42,17 @@ class MarkdownExtractTests(unittest.TestCase):
             ],
         )
 
+    def test_only_bold(self):
+        node = TextNode("**word**", TextType.TEXT)
+        new_nodes = split_nodes_bold_italic_code([node])
+        self.assertListEqual(
+            new_nodes,
+            [TextNode("word", TextType.BOLD)],
+        )
+
     def test_single_italic(self):
         node = TextNode("This is a italic *word*", TextType.TEXT)
-        new_nodes, _ = split_nodes_bold_italic_code(
-            [node], delimiter="*", text_type=TextType.ITALIC
-        )
+        new_nodes = split_nodes_bold_italic_code([node])
         self.assertListEqual(
             new_nodes,
             [
@@ -57,11 +61,17 @@ class MarkdownExtractTests(unittest.TestCase):
             ],
         )
 
+    def test_only_italic(self):
+        node = TextNode("*word*", TextType.TEXT)
+        new_nodes = split_nodes_bold_italic_code([node])
+        self.assertListEqual(
+            new_nodes,
+            [TextNode("word", TextType.ITALIC)],
+        )
+
     def test_single_code(self):
         node = TextNode("This is a coded `word`", TextType.TEXT)
-        new_nodes, _ = split_nodes_bold_italic_code(
-            [node], delimiter="`", text_type=TextType.CODE
-        )
+        new_nodes = split_nodes_bold_italic_code([node])
         self.assertListEqual(
             new_nodes,
             [
@@ -70,13 +80,19 @@ class MarkdownExtractTests(unittest.TestCase):
             ],
         )
 
+    def test_only_code(self):
+        node = TextNode("`word`", TextType.TEXT)
+        new_nodes = split_nodes_bold_italic_code([node])
+        self.assertListEqual(
+            new_nodes,
+            [TextNode("word", TextType.CODE)],
+        )
+
     def test_multiple_bold(self):
         node = TextNode(
             "This is a bolded **word** and here another **bolded word**", TextType.TEXT
         )
-        new_nodes, _ = split_nodes_bold_italic_code(
-            [node], delimiter="**", text_type=TextType.BOLD
-        )
+        new_nodes = split_nodes_bold_italic_code([node])
         self.assertListEqual(
             new_nodes,
             [
@@ -91,9 +107,7 @@ class MarkdownExtractTests(unittest.TestCase):
         node = TextNode(
             "This is a italic *word* and here another *italic word*", TextType.TEXT
         )
-        new_nodes, _ = split_nodes_bold_italic_code(
-            [node], delimiter="*", text_type=TextType.ITALIC
-        )
+        new_nodes = split_nodes_bold_italic_code([node])
         self.assertListEqual(
             new_nodes,
             [
@@ -108,9 +122,7 @@ class MarkdownExtractTests(unittest.TestCase):
         node = TextNode(
             "This is a coded `word` and here another `coded word`", TextType.TEXT
         )
-        new_nodes, _ = split_nodes_bold_italic_code(
-            [node], delimiter="`", text_type=TextType.CODE
-        )
+        new_nodes = split_nodes_bold_italic_code([node])
         self.assertListEqual(
             new_nodes,
             [
@@ -126,7 +138,7 @@ class MarkdownExtractTests(unittest.TestCase):
             "![image](https://www.example.com/image.png)",
             TextType.TEXT,
         )
-        new_nodes, _ = split_nodes_image_link([node], TextType.IMAGE)
+        new_nodes = split_nodes_image_link([node])
         self.assertListEqual(
             [
                 TextNode("image", TextType.IMAGE, "https://www.example.com/image.png"),
@@ -139,7 +151,7 @@ class MarkdownExtractTests(unittest.TestCase):
             "This is text with an ![image](https://i.imgur.com/zjjcJKZ.png) and another ![second image](https://i.imgur.com/3elNhQu.png)",
             TextType.TEXT,
         )
-        new_nodes, _ = split_nodes_image_link([node], TextType.IMAGE)
+        new_nodes = split_nodes_image_link([node])
         self.assertListEqual(
             [
                 TextNode("This is text with an ", TextType.TEXT),
@@ -157,8 +169,7 @@ class MarkdownExtractTests(unittest.TestCase):
             "This is my [link](https://www.example.com)",
             TextType.TEXT,
         )
-        new_nodes, _ = split_nodes_image_link([node], TextType.LINK)
-        print(new_nodes)
+        new_nodes = split_nodes_image_link([node])
         self.assertListEqual(
             [
                 TextNode("This is my ", TextType.TEXT),
@@ -172,8 +183,7 @@ class MarkdownExtractTests(unittest.TestCase):
             "[link](https://www.example.com)",
             TextType.TEXT,
         )
-        new_nodes, _ = split_nodes_image_link([node], TextType.LINK)
-        print(new_nodes)
+        new_nodes = split_nodes_image_link([node])
         self.assertListEqual(
             [TextNode("link", TextType.LINK, "https://www.example.com")],
             new_nodes,
@@ -184,7 +194,7 @@ class MarkdownExtractTests(unittest.TestCase):
             "This is my [link](https://www.example.com), hey, and this is [another link](https://www.example2.com)",
             TextType.TEXT,
         )
-        new_nodes, _ = split_nodes_image_link([node], TextType.LINK)
+        new_nodes = split_nodes_image_link([node])
         self.assertListEqual(
             [
                 TextNode("This is my ", TextType.TEXT),
