@@ -36,8 +36,7 @@ def extract_markdown_links(text: str):
 def split_nodes_bold_italic_code(nodes: list[TextNode]) -> list[TextNode]:
     index = 0
     while index < len(nodes):
-        finds_bold, finds_code, finds_italic, finds = [], [], [], []
-        nodes_to_update = []
+        finds_bold, finds_code, finds_italic, finds, to_update = [], [], [], [], []
         if nodes[index].text_type is not TextType.TEXT:
             index += 1
             continue
@@ -71,16 +70,16 @@ def split_nodes_bold_italic_code(nodes: list[TextNode]) -> list[TextNode]:
             raise ValueError("Invalid markdown, image section not closed")
 
         if sections[0] != "":
-            nodes_to_update.append(TextNode(sections[0], TextType.TEXT))
+            to_update.append(TextNode(sections[0], TextType.TEXT))
 
         if len(nodes[index].text) > 1:
-            nodes_to_update.append(TextNode(finds[0], text_type))
+            to_update.append(TextNode(finds[0], text_type))
 
         if sections[1] != "":
             original_text = sections[1]
-            nodes_to_update.append(TextNode(original_text, TextType.TEXT))
+            to_update.append(TextNode(original_text, TextType.TEXT))
 
-        nodes[index : index + 1] = nodes_to_update
+        nodes[index : index + 1] = to_update
 
     return nodes
 
@@ -88,7 +87,7 @@ def split_nodes_bold_italic_code(nodes: list[TextNode]) -> list[TextNode]:
 def split_nodes_image_link(nodes: list[TextNode]):
     index = 0
     while index < len(nodes):
-        finds_image, finds_links, finds, nodes_to_update = [], [], [], []
+        finds_image, finds_links, finds, to_update = [], [], [], []
         if nodes[index].text_type is not TextType.TEXT:
             index += 1
             continue
@@ -118,16 +117,16 @@ def split_nodes_image_link(nodes: list[TextNode]):
         if len(sections) != 2:
             raise ValueError("Invalid markdown, image section not closed")
         if sections[0] != "":
-            nodes_to_update.append(TextNode(sections[0], TextType.TEXT))
+            to_update.append(TextNode(sections[0], TextType.TEXT))
 
         if len(nodes[index].text) > 1:
-            nodes_to_update.append(TextNode(finds[0][0], text_type, finds[0][1]))
+            to_update.append(TextNode(finds[0][0], text_type, finds[0][1]))
 
         if sections[1] != "":
             original_text = sections[1]
-            nodes_to_update.append(TextNode(original_text, TextType.TEXT))
+            to_update.append(TextNode(original_text, TextType.TEXT))
 
-        nodes[index : index + 1] = nodes_to_update
+        nodes[index : index + 1] = to_update
 
     return nodes
 
