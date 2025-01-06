@@ -1,10 +1,11 @@
 import unittest
 from markdown_extract import (
-    extract_markdown_images,
-    extract_markdown_links,
+    extract_markdown_elements,
     split_nodes_bold_italic_code,
     split_nodes_image_link,
     text_to_textnodes,
+    IMAGES_RE,
+    LINK_RE,
 )
 from textnode import TextNode, TextType
 
@@ -12,7 +13,7 @@ from textnode import TextNode, TextType
 class MarkdownExtractTests(unittest.TestCase):
     def test_extract_images(self):
         text = "This is text with a ![rick roll](https://i.imgur.com/aKaOqIh.gif) and ![obi wan](https://i.imgur.com/fJRm4Vk.jpeg)"
-        extracted_text = extract_markdown_images(text)
+        extracted_text = extract_markdown_elements(text, IMAGES_RE)
         self.assertEqual(
             extracted_text,
             [
@@ -23,7 +24,7 @@ class MarkdownExtractTests(unittest.TestCase):
 
     def test_extract_links(self):
         text = "This is text with a link [to boot dev](https://www.boot.dev) and [to youtube](https://www.youtube.com/@bootdotdev)"
-        extracted_text = extract_markdown_links(text)
+        extracted_text = extract_markdown_elements(text, LINK_RE)
         self.assertEqual(
             extracted_text,
             [

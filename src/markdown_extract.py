@@ -8,28 +8,8 @@ ITALIC_RE = r"\*(.*?)\*"
 CODE_RE = r"`(.*?)`"
 
 
-def extract_markdown_bold(text: str):
-    finds = re.findall(BOLD_RE, text)
-    return finds
-
-
-def extract_markdown_italic(text: str):
-    finds = re.findall(ITALIC_RE, text)
-    return finds
-
-
-def extract_markdown_code(text: str):
-    finds = re.findall(CODE_RE, text)
-    return finds
-
-
-def extract_markdown_images(text: str):
-    finds = re.findall(IMAGES_RE, text)
-    return finds
-
-
-def extract_markdown_links(text: str):
-    finds = re.findall(LINK_RE, text)
+def extract_markdown_elements(text: str, regex_pattern: str):
+    finds = re.findall(regex_pattern, text)
     return finds
 
 
@@ -44,9 +24,9 @@ def split_nodes_bold_italic_code(nodes: list[TextNode]) -> list[TextNode]:
         if nodes[index].text == "":
             return nodes
 
-        finds_bold = extract_markdown_bold(nodes[index].text)
-        finds_italic = extract_markdown_italic(nodes[index].text)
-        finds_code = extract_markdown_code(nodes[index].text)
+        finds_bold = extract_markdown_elements(nodes[index].text, BOLD_RE)
+        finds_italic = extract_markdown_elements(nodes[index].text, ITALIC_RE)
+        finds_code = extract_markdown_elements(nodes[index].text, CODE_RE)
         if finds_code:
             delimiter = "`"
             finds = finds_code
@@ -95,8 +75,8 @@ def split_nodes_image_link(nodes: list[TextNode]):
         if nodes[index].text == "":
             return nodes
 
-        finds_image = extract_markdown_images(nodes[index].text)
-        finds_links = extract_markdown_links(nodes[index].text)
+        finds_image = extract_markdown_elements(nodes[index].text, IMAGES_RE)
+        finds_links = extract_markdown_elements(nodes[index].text, LINK_RE)
 
         if finds_image:
             finds = finds_image
