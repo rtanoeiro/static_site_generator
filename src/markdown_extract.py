@@ -1,5 +1,5 @@
 import re
-from textnode import TextNode, TextType
+from src.textnode import TextNode, TextType
 
 IMAGES_RE = r"!\[(.*?)\]\((.*?)\)"
 LINK_RE = r"\[(.*?)\]\((.*?)\)"
@@ -117,10 +117,23 @@ def markdown_to_blocks(markdown: str):
     markdown_list = markdown.split("\n")
     final_list = []
     for item in markdown_list:
-        if item == "\n":
+        if item == "":
             continue
         final_list.append(item.strip())
     return final_list
+
+
+def block_to_block_type(block: str):
+    if block.startswith("#"):
+        return "header"
+    if block.startswith("```") and block.endswith("```"):
+        return "code"
+    if block.startswith(">"):
+        return "quote"
+    if block.startswith("*") or block.startswith("-"):
+        return "unordered_list"
+    if int(block.split(".")[0]):
+        return "ordered_list"
 
 
 def text_to_textnodes(text: str):

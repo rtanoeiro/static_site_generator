@@ -1,16 +1,18 @@
 import unittest
-from markdown_extract import (
+from src.markdown_extract import (
     extract_markdown_elements,
     split_nodes_bold_italic_code,
     split_nodes_image_link,
     text_to_textnodes,
+    markdown_to_blocks,
+    block_to_block_type,
     IMAGES_RE,
     LINK_RE,
     BOLD_RE,
     ITALIC_RE,
     CODE_RE,
 )
-from textnode import TextNode, TextType
+from src.textnode import TextNode, TextType
 
 
 class MarkdownExtractTests(unittest.TestCase):
@@ -273,6 +275,41 @@ class MarkdownExtractTests(unittest.TestCase):
             TextNode("link", TextType.LINK, "https://boot.dev"),
         ]
         self.assertEqual(new_nodes, expected)
+
+    def test_markdown_to_blocks(self):
+        markdown_string = """# This is a heading
+
+        This is a paragraph of text. It has some **bold** and *italic* words inside of it.
+
+        * This is the first list item in a list block
+        * This is a list item
+        * This is another list item"""
+        blocks = markdown_to_blocks(markdown_string)
+        self.assertEqual(len(blocks), 5)
+        self.assertEqual(blocks[0], "# This is a heading")
+        self.assertEqual(
+            blocks[1],
+            "This is a paragraph of text. It has some **bold** and *italic* words inside of it.",
+        )
+        self.assertEqual(blocks[2], "* This is the first list item in a list block")
+        self.assertEqual(blocks[3], "* This is a list item")
+        self.assertEqual(blocks[4], "* This is another list item")
+
+    def test_block_to_block_type(self):
+        list_of_blocks = [
+            "## My header",
+            "```python code```",
+            "> quote someone famous",
+            "* My first list",
+            "- my second list",
+            "1. my correctly ordered list",
+        ]
+        self.assertEqual(block_to_block_type(list_of_blocks[0]), "header")
+        self.assertEqual(block_to_block_type(list_of_blocks[1]), "code")
+        self.assertEqual(block_to_block_type(list_of_blocks[2]), "quote")
+        self.assertEqual(block_to_block_type(list_of_blocks[3]), "unordered_list")
+        self.assertEqual(block_to_block_type(list_of_blocks[4]), "unordered_list")
+        self.assertEqual(block_to_block_type(list_of_blocks[5]), "ordered_list")
 
 
 if __name__ == "__main__":
