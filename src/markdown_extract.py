@@ -33,112 +33,147 @@ def extract_markdown_links(text: str):
     return finds
 
 
-def split_nodes_bold_italic_code(
-    old_nodes: list[TextNode], delimiter: str, text_type: TextType
-):
-    new_nodes_list: list[TextNode] = []
-    for node in old_nodes:
+def split_nodes_bold_italic_code(nodes: list[TextNode]) -> list[TextNode]:
+    # Fix the while loop so it doesn't need a for loop too.
+    # It should stay in the current index, until it doesn't find any new findings
+    index = 0
+    while index < len(nodes):
+        finds_bold, finds_code, finds_italic, finds = [], [], [], []
+        nodes_to_update = []
         # In case the text node is not IMAGE type
-        if node.text_type != TextType.TEXT:
-            new_nodes_list.append(node)
+        if nodes[index].text_type is not TextType.TEXT:
+            index += 1
             continue
 
-        if node.text == "":
+        if nodes[index].text == "":
             # Condition to leave recursion, at the last split, the text will be an empty string
-            return new_nodes_list
-        original_text = node.text
+            return nodes
 
-        if text_type == TextType.BOLD:
-            finds = extract_markdown_bold(original_text)
-        if text_type == TextType.ITALIC:
-            finds = extract_markdown_italic(original_text)
-        if text_type == TextType.CODE:
-            finds = extract_markdown_code(original_text)
+        finds_bold = extract_markdown_bold(nodes[index].text)
+        finds_italic = extract_markdown_italic(nodes[index].text)
+        finds_code = extract_markdown_code(nodes[index].text)
+        if finds_code:
+            delimiter = "`"
+            finds = finds_code
+            text_type = TextType.CODE
+        elif finds_bold:
+            delimiter = "**"
+            finds = finds_bold
+            text_type = TextType.BOLD
+        elif finds_italic:
+            delimiter = "*"
+            finds = finds_italic
+            text_type = TextType.ITALIC
 
-        if len(finds) == 0:
+        if not finds:
+            index += 1
             continue
 
-        for find in finds:
-            sections = original_text.split(f"{delimiter}{find}{delimiter}", 1)
+        sections = nodes[index].text.split(f"{delimiter}{finds[0]}{delimiter}", 1)
 
-            if len(sections) != 2:
-                raise ValueError("Invalid markdown, image section not closed")
-            if sections[0] != "":
-                new_nodes_list.append(TextNode(sections[0], TextType.TEXT))
-            new_nodes_list.append(TextNode(find, text_type))
-            # Update the text for the next iteraction
+        if len(sections) != 2:
+            raise ValueError("Invalid markdown, image section not closed")
+
+        if sections[0] != "":
+            nodes_to_update.append(TextNode(sections[0], TextType.TEXT))
+
+        if len(nodes[index].text) > 1:
+            nodes_to_update.append(TextNode(finds[0], text_type))
+
+        if sections[1] != "":
             original_text = sections[1]
+            nodes_to_update.append(TextNode(original_text, TextType.TEXT))
 
-    return new_nodes_list, original_text
+        nodes[index : index + 1] = nodes_to_update
+
+    return nodes
 
 
-def split_nodes_image_link(old_nodes: list[TextNode], text_type: TextType):
-    new_nodes_list: list[TextNode] = []
-    for node in old_nodes:
+def split_nodes_image_link(nodes: list[TextNode]):
+    index = 0
+    while index < len(nodes):
+        finds_image, finds_links, finds = [], [], []
+        nodes_to_update = []
         # In case the text node is not IMAGE type
-        if node.text_type != TextType.TEXT:
-            new_nodes_list.append(node)
+        if nodes[index].text_type is not TextType.TEXT:
+            index += 1
             continue
 
-        if node.text == "":
+        if nodes[index].text == "":
             # Condition to leave recursion, at the last split, the text will be an empty string
-            return new_nodes_list
-        original_text = node.text
+            return nodes
+
+        finds_image = extract_markdown_images(nodes[index].text)
+        finds_links = extract_markdown_links(nodes[index].text)
+
+        if finds_image:
+            finds = finds_image
+            text_type = TextType.IMAGE
+        elif finds_links:
+            finds = finds_links
+            text_type = TextType.LINK
+
+        if not finds:
+            index += 1
+            continue
 
         if text_type == TextType.IMAGE:
-            finds = extract_markdown_images(original_text)
+            sections = nodes[index].text.split(f"![{finds[0][0]}]({finds[0][1]})", 1)
         if text_type == TextType.LINK:
-            finds = extract_markdown_links(original_text)
+            sections = nodes[index].text.split(f"[{finds[0][0]}]({finds[0][1]})", 1)
 
-        if len(finds) == 0:
-            continue
+        if len(sections) != 2:
+            raise ValueError("Invalid markdown, image section not closed")
+        if sections[0] != "":
+            nodes_to_update.append(TextNode(sections[0], TextType.TEXT))
 
-        for find in finds:
-            if text_type == TextType.IMAGE:
-                sections = original_text.split(f"![{find[0]}]({find[1]})", 1)
-            if text_type == TextType.LINK:
-                sections = original_text.split(f"[{find[0]}]({find[1]})", 1)
+        if len(nodes[index].text) > 1:
+            nodes_to_update.append(TextNode(finds[0][0], text_type, finds[0][1]))
 
-            if len(sections) != 2:
-                raise ValueError("Invalid markdown, image section not closed")
-            if sections[0] != "":
-                new_nodes_list.append(TextNode(sections[0], TextType.TEXT))
-            new_nodes_list.append(
-                TextNode(
-                    find[0],
-                    text_type,
-                    find[1],
-                )
-            )
-            # Update the text for the next iteraction
+        if sections[1] != "":
             original_text = sections[1]
+            nodes_to_update.append(TextNode(original_text, TextType.TEXT))
 
-    return new_nodes_list, original_text
+        nodes[index : index + 1] = nodes_to_update
+
+    return nodes
 
 
-# Improve to use a while loop
-# Improve to modify the nodes in the function, as text and not text types are automatically skipped!
-# This should reduce the need to return original_text
 def text_to_textnodes(text: str):
     nodes = [TextNode(text, TextType.TEXT)]
-    final_nodes = []
-    nodes, new_text = split_nodes_bold_italic_code(nodes, "**", TextType.BOLD)
-    final_nodes.extend(nodes)
-    nodes, new_text = split_nodes_bold_italic_code(
-        [TextNode(new_text, TextType.TEXT)], "*", TextType.ITALIC
-    )
-    final_nodes.extend(nodes)
-    nodes, new_text = split_nodes_bold_italic_code(
-        [TextNode(new_text, TextType.TEXT)], "`", TextType.CODE
-    )
-    final_nodes.extend(nodes)
-    nodes, new_text = split_nodes_image_link(
-        [TextNode(new_text, TextType.TEXT)], TextType.IMAGE
-    )
-    final_nodes.extend(nodes)
-    nodes, new_text = split_nodes_image_link(
-        [TextNode(new_text, TextType.TEXT)], TextType.LINK
-    )
-    final_nodes.extend(nodes)
+    nodes = split_nodes_bold_italic_code(nodes)
+    nodes = split_nodes_image_link(nodes)
+    return nodes
 
-    return final_nodes
+
+if __name__ == "__main__":
+    text = "This is *italic* word with a **text** and a `code block` and an ![obi wan image](https://i.imgur.com/fJRm4Vk.jpeg) and a [link](https://boot.dev)"
+    new_nodes = text_to_textnodes(text)
+    expected = [
+        TextNode("This is ", TextType.TEXT),
+        TextNode("italic", TextType.ITALIC),
+        TextNode(" word with a ", TextType.TEXT),
+        TextNode("text", TextType.BOLD),
+        TextNode(" and a ", TextType.TEXT),
+        TextNode("code block", TextType.CODE),
+        TextNode(" and an ", TextType.TEXT),
+        TextNode("obi wan image", TextType.IMAGE, "https://i.imgur.com/fJRm4Vk.jpeg"),
+        TextNode(" and a ", TextType.TEXT),
+        TextNode("link", TextType.LINK, "https://boot.dev"),
+    ]
+    print(new_nodes == expected)
+    text_2 = "This is **text** with an *italic* word and a `code block` and an ![obi wan image](https://i.imgur.com/fJRm4Vk.jpeg) and a [link](https://boot.dev)"
+    new_nodes2 = text_to_textnodes(text_2)
+    expected_2 = [
+        TextNode("This is ", TextType.TEXT),
+        TextNode("text", TextType.BOLD),
+        TextNode(" with an ", TextType.TEXT),
+        TextNode("italic", TextType.ITALIC),
+        TextNode(" word and a ", TextType.TEXT),
+        TextNode("code block", TextType.CODE),
+        TextNode(" and an ", TextType.TEXT),
+        TextNode("obi wan image", TextType.IMAGE, "https://i.imgur.com/fJRm4Vk.jpeg"),
+        TextNode(" and a ", TextType.TEXT),
+        TextNode("link", TextType.LINK, "https://boot.dev"),
+    ]
+    print(new_nodes2 == expected_2)
