@@ -9,6 +9,8 @@ CODE_RE = r"`(.*?)`"
 
 
 def extract_markdown_elements(text: str, regex_pattern: str):
+    if not text:
+        return []
     finds = re.findall(regex_pattern, text)
     return finds
 
@@ -109,6 +111,16 @@ def split_nodes_image_link(nodes: list[TextNode]):
         nodes[index : index + 1] = to_update
 
     return nodes
+
+
+def markdown_to_blocks(markdown: str):
+    markdown_list = markdown.split("\n")
+    final_list = []
+    for item in markdown_list:
+        if item == "\n":
+            continue
+        final_list.append(item.strip())
+    return final_list
 
 
 def text_to_textnodes(text: str):

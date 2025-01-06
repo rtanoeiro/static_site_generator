@@ -6,11 +6,39 @@ from markdown_extract import (
     text_to_textnodes,
     IMAGES_RE,
     LINK_RE,
+    BOLD_RE,
+    ITALIC_RE,
+    CODE_RE,
 )
 from textnode import TextNode, TextType
 
 
 class MarkdownExtractTests(unittest.TestCase):
+    def test_extract_bold(self):
+        text = "This is text with a **bolded word** and **another bolded word**"
+        extracted_text = extract_markdown_elements(text, BOLD_RE)
+        self.assertEqual(extracted_text, ["bolded word", "another bolded word"])
+
+    def test_extract_italic(self):
+        text = "This is text with a *italic word* and *another italic word*"
+        extracted_text = extract_markdown_elements(text, ITALIC_RE)
+        self.assertEqual(extracted_text, ["italic word", "another italic word"])
+
+    def test_extract_code(self):
+        text = "This is text with a `code block` and `another code block`"
+        extracted_text = extract_markdown_elements(text, CODE_RE)
+        self.assertEqual(extracted_text, ["code block", "another code block"])
+
+    def test_extract_none(self):
+        text = "This is text with no markdown elements"
+        extracted_text = extract_markdown_elements(text, BOLD_RE)
+        self.assertEqual(extracted_text, [])
+
+    def test_extract_another_none(self):
+        text = None
+        extracted_text = extract_markdown_elements(text, BOLD_RE)
+        self.assertEqual(extracted_text, [])
+
     def test_extract_images(self):
         text = "This is text with a ![rick roll](https://i.imgur.com/aKaOqIh.gif) and ![obi wan](https://i.imgur.com/fJRm4Vk.jpeg)"
         extracted_text = extract_markdown_elements(text, IMAGES_RE)
