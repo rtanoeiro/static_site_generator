@@ -34,19 +34,15 @@ def extract_markdown_links(text: str):
 
 
 def split_nodes_bold_italic_code(nodes: list[TextNode]) -> list[TextNode]:
-    # Fix the while loop so it doesn't need a for loop too.
-    # It should stay in the current index, until it doesn't find any new findings
     index = 0
     while index < len(nodes):
         finds_bold, finds_code, finds_italic, finds = [], [], [], []
         nodes_to_update = []
-        # In case the text node is not IMAGE type
         if nodes[index].text_type is not TextType.TEXT:
             index += 1
             continue
 
         if nodes[index].text == "":
-            # Condition to leave recursion, at the last split, the text will be an empty string
             return nodes
 
         finds_bold = extract_markdown_bold(nodes[index].text)
@@ -92,15 +88,12 @@ def split_nodes_bold_italic_code(nodes: list[TextNode]) -> list[TextNode]:
 def split_nodes_image_link(nodes: list[TextNode]):
     index = 0
     while index < len(nodes):
-        finds_image, finds_links, finds = [], [], []
-        nodes_to_update = []
-        # In case the text node is not IMAGE type
+        finds_image, finds_links, finds, nodes_to_update = [], [], [], []
         if nodes[index].text_type is not TextType.TEXT:
             index += 1
             continue
 
         if nodes[index].text == "":
-            # Condition to leave recursion, at the last split, the text will be an empty string
             return nodes
 
         finds_image = extract_markdown_images(nodes[index].text)
@@ -144,36 +137,3 @@ def text_to_textnodes(text: str):
     nodes = split_nodes_bold_italic_code(nodes)
     nodes = split_nodes_image_link(nodes)
     return nodes
-
-
-if __name__ == "__main__":
-    text = "This is *italic* word with a **text** and a `code block` and an ![obi wan image](https://i.imgur.com/fJRm4Vk.jpeg) and a [link](https://boot.dev)"
-    new_nodes = text_to_textnodes(text)
-    expected = [
-        TextNode("This is ", TextType.TEXT),
-        TextNode("italic", TextType.ITALIC),
-        TextNode(" word with a ", TextType.TEXT),
-        TextNode("text", TextType.BOLD),
-        TextNode(" and a ", TextType.TEXT),
-        TextNode("code block", TextType.CODE),
-        TextNode(" and an ", TextType.TEXT),
-        TextNode("obi wan image", TextType.IMAGE, "https://i.imgur.com/fJRm4Vk.jpeg"),
-        TextNode(" and a ", TextType.TEXT),
-        TextNode("link", TextType.LINK, "https://boot.dev"),
-    ]
-    print(new_nodes == expected)
-    text_2 = "This is **text** with an *italic* word and a `code block` and an ![obi wan image](https://i.imgur.com/fJRm4Vk.jpeg) and a [link](https://boot.dev)"
-    new_nodes2 = text_to_textnodes(text_2)
-    expected_2 = [
-        TextNode("This is ", TextType.TEXT),
-        TextNode("text", TextType.BOLD),
-        TextNode(" with an ", TextType.TEXT),
-        TextNode("italic", TextType.ITALIC),
-        TextNode(" word and a ", TextType.TEXT),
-        TextNode("code block", TextType.CODE),
-        TextNode(" and an ", TextType.TEXT),
-        TextNode("obi wan image", TextType.IMAGE, "https://i.imgur.com/fJRm4Vk.jpeg"),
-        TextNode(" and a ", TextType.TEXT),
-        TextNode("link", TextType.LINK, "https://boot.dev"),
-    ]
-    print(new_nodes2 == expected_2)
