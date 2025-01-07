@@ -115,7 +115,7 @@ def split_nodes_image_link(nodes: list[TextNode]):
 
 
 def markdown_to_blocks(markdown: str):
-    markdown_list = markdown.split("\n")
+    markdown_list = markdown.split("\n\n")
     final_list = []
     for item in markdown_list:
         if item == "":
@@ -139,14 +139,32 @@ def block_to_block_type(block: str):
 
 def markdown_to_html_node(markdown: str):
     markdown_blocks = markdown_to_blocks(markdown)
-
+    html_list = []
     for block in markdown_blocks:
         block_type = block_to_block_type(block)
 
+        if block_type == "header":
+            html_node = header_to_html(block)
+        elif block_type == "code":
+            html_node = code_to_html(block)   
+        elif block_type == "quote":
+            html_node = quote_to_html(block)
+        elif block_type == "unordered_list":
+            html_node = unordered_list_to_html(block)
+        elif block_type == "ordered_list":
+            html_node = ordered_list_to_html(block)
+        else:
+            html_node = HTMLNode(tag="p", value=block)
+
+        if html_node:
+            html_list.append(html_node)
+    return html_list
+
+    
 
 def header_to_html(block: str):
-    header_size = len(list(filter(lambda x: x == "#", block)))
-    text = block.split(header_size * "#")[1].strip()  # Split after nth #`s
+    header_size = len(list(filter(lambda x: x == "#", block))) # Calculate the number of # in a quote
+    text = block.split(header_size * "#")[1].strip()  # Split after nth #`s so we have the quoted text
     return HTMLNode(f"h{header_size}", value=text)
 
 
@@ -161,13 +179,23 @@ def quote_to_html(block: str):
 
 
 def unordered_list_to_html(block: str):
-    text = block.split("*")[1].strip()
-    return HTMLNode("ul", value=text)
+    list_items = block.split("\n")
+    children_list = []
+    for item in list_items:
+        text = item.split("*")[1].strip()
+        children_list.append(HTMLNode("ol", text))
+
+    return HTMLNode("ul", children=children_list)
 
 
 def ordered_list_to_html(block: str):
-    text = block.split(".")[1].strip()
-    return HTMLNode("ol", value=text)
+    list_items = block.split("\n")
+    children_list = []
+    for item in list_items:
+        text = item.split("*")[1].strip()
+        children_list.append(HTMLNode("li", text))
+
+    return HTMLNode("ol", children=children_list)
 
 
 def text_to_textnodes(text: str):
