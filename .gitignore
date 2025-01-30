@@ -3,3 +3,5 @@ __pycache__/
 .gitignore
 .vscode/settings.json
 .vscode/settings.json
+public/
+.venv/
