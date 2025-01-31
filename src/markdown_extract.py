@@ -17,6 +17,18 @@ def extract_markdown_elements(text: str, regex_pattern: str):
     return finds
 
 
+def extract_title(markdown: str) -> str:
+    markdown_blocks = markdown_to_blocks(markdown)
+
+    for block in markdown_blocks:
+        block_type = block_to_block_type(block)
+
+        if block_type == "header":
+            html_node = header_to_html(block)
+
+        return html_node.value
+
+
 def split_nodes_bold_italic_code(nodes: list[TextNode]) -> list[TextNode]:
     index = 0
     while index < len(nodes):
@@ -162,7 +174,7 @@ def markdown_to_html_node(markdown: str):
     return html_list
 
 
-def header_to_html(block: str):
+def header_to_html(block: str) -> HTMLNode:
     header_size = len(
         list(filter(lambda x: x == "#", block))
     )  # Calculate the number of # in a quote
@@ -186,7 +198,7 @@ def unordered_list_to_html(block: str):
     list_items = block.split("\n")
     children_list = []
     for item in list_items:
-        text = item.split("*")[1].strip()
+        text = item.split("-")[1].strip()
         children_list.append(HTMLNode("ol", text))
 
     return HTMLNode("ul", children=children_list)
@@ -195,8 +207,8 @@ def unordered_list_to_html(block: str):
 def ordered_list_to_html(block: str):
     list_items = block.split("\n")
     children_list = []
-    for item in list_items:
-        text = item.split("*")[1].strip()
+    for index, item in enumerate(list_items):
+        text = item.split(f"{index+1}.")[1].strip()
         children_list.append(HTMLNode("li", text))
 
     return HTMLNode("ol", children=children_list)

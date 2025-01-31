@@ -7,6 +7,7 @@ from src.markdown_extract import (
     markdown_to_blocks,
     block_to_block_type,
     markdown_to_html_node,
+    extract_title,
     IMAGES_RE,
     LINK_RE,
     BOLD_RE,
@@ -18,6 +19,15 @@ from src.htmlnode import HTMLNode
 
 
 class MarkdownExtractTests(unittest.TestCase):
+    def test_extract_title(self):
+        text = """# This is a heading
+
+This is a paragraph of text. It has some **bold** and *italic* words inside of it."""
+
+        results = extract_title(text)
+
+        self.assertEqual(results, "This is a heading")
+
     def test_extract_bold(self):
         text = "This is text with a **bolded word** and **another bolded word**"
         extracted_text = extract_markdown_elements(text, BOLD_RE)
@@ -289,8 +299,14 @@ This is a paragraph of text. It has some **bold** and *italic* words inside of i
         blocks = markdown_to_blocks(markdown_string)
         self.assertEqual(len(blocks), 3)
         self.assertEqual(blocks[0], "# This is a heading")
-        self.assertEqual(blocks[1], "This is a paragraph of text. It has some **bold** and *italic* words inside of it.")
-        self.assertEqual(blocks[2], "* This is the first list item in a list block\n* This is a list item\n* This is another list item")
+        self.assertEqual(
+            blocks[1],
+            "This is a paragraph of text. It has some **bold** and *italic* words inside of it.",
+        )
+        self.assertEqual(
+            blocks[2],
+            "* This is the first list item in a list block\n* This is a list item\n* This is another list item",
+        )
 
     def test_block_to_block_type(self):
         list_of_blocks = [
@@ -308,10 +324,9 @@ This is a paragraph of text. It has some **bold** and *italic* words inside of i
         self.assertEqual(block_to_block_type(list_of_blocks[4]), "unordered_list")
         self.assertEqual(block_to_block_type(list_of_blocks[5]), "ordered_list")
 
-
     def test_create_html_header(self):
         markdown = "# This is a header"
-        markdown_1 =  "## This is another header"
+        markdown_1 = "## This is another header"
 
         result = markdown_to_html_node(markdown)
         result_1 = markdown_to_html_node(markdown_1)
@@ -340,7 +355,19 @@ This is a paragraph of text. It has some **bold** and *italic* words inside of i
 
         result = markdown_to_html_node(markdown)
 
-        self.assertEqual(result, [HTMLNode("ul", children=[HTMLNode("ol", "First item of unordered list"), HTMLNode("ol", "Second item of unordered list"), HTMLNode("ol", "Third item of unordered list")])])
+        self.assertEqual(
+            result,
+            [
+                HTMLNode(
+                    "ul",
+                    children=[
+                        HTMLNode("ol", "First item of unordered list"),
+                        HTMLNode("ol", "Second item of unordered list"),
+                        HTMLNode("ol", "Third item of unordered list"),
+                    ],
+                )
+            ],
+        )
 
     def test_create_html_ordered_list(self):
         markdown = """
@@ -351,7 +378,20 @@ This is a paragraph of text. It has some **bold** and *italic* words inside of i
 
         result = markdown_to_html_node(markdown)
 
-        self.assertEqual(result, [HTMLNode("ol", children=[HTMLNode("li", "First item of ordered list"), HTMLNode("li", "Second item of ordered list"), HTMLNode("li", "Third item of ordered list")])])
+        self.assertEqual(
+            result,
+            [
+                HTMLNode(
+                    "ol",
+                    children=[
+                        HTMLNode("li", "First item of ordered list"),
+                        HTMLNode("li", "Second item of ordered list"),
+                        HTMLNode("li", "Third item of ordered list"),
+                    ],
+                )
+            ],
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
