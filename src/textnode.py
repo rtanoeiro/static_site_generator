@@ -1,7 +1,9 @@
 from enum import Enum
+from pathlib import Path
+
 from src.htmlnode import LeafNode
 from utils import move_files_to_another_directory
-from pathlib import Path
+
 
 class TextType(Enum):
     TEXT = "text"

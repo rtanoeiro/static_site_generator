@@ -1,6 +1,7 @@
 import re
-from src.textnode import TextNode, TextType
+
 from src.htmlnode import HTMLNode
+from src.textnode import TextNode, TextType
 
 IMAGES_RE = r"!\[(.*?)\]\((.*?)\)"
 LINK_RE = r"\[(.*?)\]\((.*?)\)"
@@ -146,7 +147,7 @@ def markdown_to_html_node(markdown: str):
         if block_type == "header":
             html_node = header_to_html(block)
         elif block_type == "code":
-            html_node = code_to_html(block)   
+            html_node = code_to_html(block)
         elif block_type == "quote":
             html_node = quote_to_html(block)
         elif block_type == "unordered_list":
@@ -160,11 +161,14 @@ def markdown_to_html_node(markdown: str):
             html_list.append(html_node)
     return html_list
 
-    
 
 def header_to_html(block: str):
-    header_size = len(list(filter(lambda x: x == "#", block))) # Calculate the number of # in a quote
-    text = block.split(header_size * "#")[1].strip()  # Split after nth #`s so we have the quoted text
+    header_size = len(
+        list(filter(lambda x: x == "#", block))
+    )  # Calculate the number of # in a quote
+    text = block.split(header_size * "#")[
+        1
+    ].strip()  # Split after nth #`s so we have the quoted text
     return HTMLNode(f"h{header_size}", value=text)
 
 
