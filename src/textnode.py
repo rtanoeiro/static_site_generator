@@ -1,6 +1,7 @@
 from enum import Enum
 from src.htmlnode import LeafNode
-
+from utils import move_files_to_another_directory
+from pathlib import Path
 
 class TextType(Enum):
     TEXT = "text"
@@ -51,6 +52,7 @@ def text_node_to_html_node(text_node: TextNode):
 
 def main():
     object_1 = TextNode("This is a text node", TextType.BOLD, "https://www.boot.dev")
+    move_files_to_another_directory(Path("static"), Path("public"))
     print(object_1.__repr__())
 
 
