@@ -6,8 +6,13 @@ from src.markdown_extract import (
     text_to_textnodes,
     markdown_to_blocks,
     block_to_block_type,
-    markdown_to_html_node,
+    header_to_html,
+    code_to_html,
+    quote_to_html,
+    unordered_list_to_html,
+    ordered_list_to_html,
     extract_title,
+    generate_page,
     IMAGES_RE,
     LINK_RE,
     BOLD_RE,
@@ -15,7 +20,7 @@ from src.markdown_extract import (
     CODE_RE,
 )
 from src.textnode import TextNode, TextType
-from src.htmlnode import HTMLNode
+from src.htmlnode import HTMLNode, ParentNode
 
 
 class MarkdownExtractTests(unittest.TestCase):
@@ -313,9 +318,12 @@ This is a paragraph of text. It has some **bold** and *italic* words inside of i
             "## My header",
             "```python code```",
             "> quote someone famous",
-            "* My first list",
-            "- my second list",
-            "1. my correctly ordered list",
+            """* My first list
+* my second list""",
+            """- My first list
+- my second list""",
+            """1. my correctly ordered list
+2. my second ordered list""",
         ]
         self.assertEqual(block_to_block_type(list_of_blocks[0]), "header")
         self.assertEqual(block_to_block_type(list_of_blocks[1]), "code")
@@ -328,22 +336,55 @@ This is a paragraph of text. It has some **bold** and *italic* words inside of i
         markdown = "# This is a header"
         markdown_1 = "## This is another header"
 
-        result = markdown_to_html_node(markdown)
-        result_1 = markdown_to_html_node(markdown_1)
+        result = header_to_html(markdown)
+        result_1 = header_to_html(markdown_1)
 
-        self.assertEqual(result, [HTMLNode("h1", "This is a header")])
-        self.assertEqual(result_1, [HTMLNode("h2", "This is another header")])
+        self.assertEqual(
+            result, ParentNode("h1", [HTMLNode(None, value="This is a header")])
+        )
+        self.assertEqual(
+            result_1, ParentNode("h2", [HTMLNode(None, value="This is another header")])
+        )
 
     def test_create_html_code(self):
         markdown = "```This is my code```"
-        result = markdown_to_html_node(markdown)
-
-        self.assertEqual(result, [HTMLNode("code", "This is my code")])
+        result = code_to_html(markdown)
+        print(result)
+        self.assertEqual(
+            result,
+            HTMLNode(
+                "pre",
+                None,
+                [
+                    HTMLNode(
+                        "code",
+                        None,
+                        [
+                            HTMLNode(
+                                "pre",
+                                None,
+                                [
+                                    HTMLNode(
+                                        "code",
+                                        None,
+                                        [HTMLNode(None, "This is my code", None, None)],
+                                        None,
+                                    )
+                                ],
+                                None,
+                            )
+                        ],
+                    )
+                ],
+                None,
+            ),
+            None,
+        )
 
     def test_create_html_quote(self):
         markdown = "> This is a quote"
 
-        result = markdown_to_html_node(markdown)
+        result = quote_to_html(markdown)
         self.assertEqual(result, [HTMLNode("blockquote", "This is a quote")])
 
     def test_create_html_unordered_list(self):
@@ -353,7 +394,7 @@ This is a paragraph of text. It has some **bold** and *italic* words inside of i
         - Third item of unordered list        
         """
 
-        result = markdown_to_html_node(markdown)
+        result = unordered_list_to_html(markdown)
 
         self.assertEqual(
             result,
@@ -376,7 +417,7 @@ This is a paragraph of text. It has some **bold** and *italic* words inside of i
         3. Third item of ordered list        
         """
 
-        result = markdown_to_html_node(markdown)
+        result = ordered_list_to_html(markdown)
 
         self.assertEqual(
             result,
@@ -391,6 +432,9 @@ This is a paragraph of text. It has some **bold** and *italic* words inside of i
                 )
             ],
         )
+
+    def test_generate_page(self):
+        generated_page = generate_page(from_path="", template_path="", dest_path="")
 
 
 if __name__ == "__main__":
