@@ -1,7 +1,7 @@
 import re
 
-from src.htmlnode import HTMLNode
-from src.textnode import TextNode, TextType
+from src.htmlnode import ParentNode
+from src.textnode import TextNode, TextType, text_node_to_html_node
 
 IMAGES_RE = r"!\[(.*?)\]\((.*?)\)"
 LINK_RE = r"\[(.*?)\]\((.*?)\)"
@@ -24,9 +24,9 @@ def extract_title(markdown: str) -> str:
         block_type = block_to_block_type(block)
 
         if block_type == "header":
-            html_node = header_to_html(block)
+            title = block[2:]
 
-        return html_node.value
+        return title
 
 
 def split_nodes_bold_italic_code(nodes: list[TextNode]) -> list[TextNode]:
@@ -138,21 +138,39 @@ def markdown_to_blocks(markdown: str):
 
 
 def block_to_block_type(block: str):
-    if block.startswith("#"):
+    block_lines = block.split("\n")
+
+    if block.startswith(("# ", "## ", "### ", "#### ", "##### ", "###### ")):
         return "header"
+
     if block.startswith("```") and block.endswith("```"):
         return "code"
+
     if block.startswith(">"):
+        for line in block_lines:
+            if not line.startswith(">"):
+                return "paragraph"
         return "quote"
-    if block.startswith("*") or block.startswith("-"):
+
+    if block.startswith("* ") or block.startswith("- "):
+        for line in block_lines:
+            if not (block.startswith("* ") or block.startswith("- ")):
+                return "paragraph"
         return "unordered_list"
-    if int(block.split(".")[0]):
+
+    if block.startswith("1. "):
+        i = 1
+        for line in block_lines:
+            if not line.startswith(f"{i}. "):
+                return "paragraph"
+            i += 1
         return "ordered_list"
+    return "paragraph"
 
 
-def markdown_to_html_node(markdown: str):
+def markdown_to_html_node(markdown: str) -> list[ParentNode]:
     markdown_blocks = markdown_to_blocks(markdown)
-    html_list = []
+    children = []
     for block in markdown_blocks:
         block_type = block_to_block_type(block)
 
@@ -166,52 +184,83 @@ def markdown_to_html_node(markdown: str):
             html_node = unordered_list_to_html(block)
         elif block_type == "ordered_list":
             html_node = ordered_list_to_html(block)
-        else:
-            html_node = HTMLNode(tag="p", value=block)
+        elif block_type == "paragraph":
+            html_node = paragraph_to_html_node(block)
 
         if html_node:
-            html_list.append(html_node)
-    return html_list
+            children.append(html_node)
+    return ParentNode("div", children, None)
 
 
-def header_to_html(block: str) -> HTMLNode:
-    header_size = len(
-        list(filter(lambda x: x == "#", block))
-    )  # Calculate the number of # in a quote
-    text = block.split(header_size * "#")[
-        1
-    ].strip()  # Split after nth #`s so we have the quoted text
-    return HTMLNode(f"h{header_size}", value=text)
+def text_to_children(text):
+    text_nodes = text_to_textnodes(text)
+    children = []
+    for text_node in text_nodes:
+        html_node = text_node_to_html_node(text_node)
+        children.append(html_node)
+    return children
 
 
-def code_to_html(block: str):
-    text = block.split("```")[1].strip()
-    return HTMLNode("code", value=text)
+def paragraph_to_html_node(block):
+    lines = block.split("\n")
+    paragraph = " ".join(lines)
+    children = text_to_children(paragraph)
+    return ParentNode("p", children)
 
 
-def quote_to_html(block: str):
-    text = block.split(">")[1].strip()
-    return HTMLNode("blockquote", value=text)
+def header_to_html(block):
+    level = 0
+    for char in block:
+        if char == "#":
+            level += 1
+        else:
+            break
+    if level + 1 >= len(block):
+        raise ValueError(f"invalid heading level: {level}")
+    text = block[level + 1 :]
+    children = text_to_children(text)
+    return ParentNode(f"h{level}", children)
 
 
-def unordered_list_to_html(block: str):
-    list_items = block.split("\n")
-    children_list = []
-    for item in list_items:
-        text = item.split("-")[1].strip()
-        children_list.append(HTMLNode("ol", text))
+def code_to_html(block):
+    if not block.startswith("```") or not block.endswith("```"):
+        raise ValueError("invalid code block")
+    text = block[3:-3]
+    children = text_to_children(text)
+    code = ParentNode("code", children)
+    return ParentNode("pre", [code])
 
-    return HTMLNode("ul", children=children_list)
+
+def ordered_list_to_html(block):
+    items = block.split("\n")
+    html_items = []
+    for item in items:
+        text = item[3:]
+        children = text_to_children(text)
+        html_items.append(ParentNode("li", children))
+    return ParentNode("ol", html_items)
 
 
-def ordered_list_to_html(block: str):
-    list_items = block.split("\n")
-    children_list = []
-    for index, item in enumerate(list_items):
-        text = item.split(f"{index+1}.")[1].strip()
-        children_list.append(HTMLNode("li", text))
+def unordered_list_to_html(block):
+    items = block.split("\n")
+    html_items = []
+    for item in items:
+        text = item[2:]
+        children = text_to_children(text)
+        html_items.append(ParentNode("li", children))
+    return ParentNode("ul", html_items)
 
-    return HTMLNode("ol", children=children_list)
+
+def quote_to_html(block):
+    lines = block.split("\n")
+    new_lines = []
+    for line in lines:
+        if not line.startswith(">"):
+            raise ValueError("invalid quote block")
+        new_lines.append(line.lstrip(">").strip())
+    content = " ".join(new_lines)
+    children = text_to_children(content)
+    return ParentNode("blockquote", children)
 
 
 def text_to_textnodes(text: str):
@@ -219,3 +268,28 @@ def text_to_textnodes(text: str):
     nodes = split_nodes_bold_italic_code(nodes)
     nodes = split_nodes_image_link(nodes)
     return nodes
+
+
+def generate_page(from_path, template_path, dest_path):
+    print(f"Generating page from {from_path} to {dest_path} using {template_path}")
+
+    with open(from_path, "r") as markdown_file:
+        markdown_text = markdown_file.read()
+
+    markdown_list = markdown_to_html_node(markdown=markdown_text)
+    markdown_html_list = []
+
+    for markdown_item in markdown_list.children:
+        markdown_html_list.append(markdown_item.to_html())
+
+    page_title = extract_title(markdown_text)
+
+    with open(template_path, "r") as template_file:
+        template_text = template_file.read()
+
+    html_from_template = template_text.replace("{{ Title }}", page_title)
+    html_to_input = "\n".join(markdown_html_list)
+    html_from_template = html_from_template.replace("{{ Content }}", html_to_input)
+
+    with open(dest_path, "w") as html_file:
+        html_file.write(html_from_template)
