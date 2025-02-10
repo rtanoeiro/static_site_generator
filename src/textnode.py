@@ -52,15 +52,14 @@ def text_node_to_html_node(text_node: TextNode):
 
 
 def main():
-    from src.markdown_extract import generate_page
+    from src.generate_pages import generate_pages_recursive
     from src.copy_files import move_files_to_another_directory
 
     object_1 = TextNode("This is a text node", TextType.BOLD, "https://www.boot.dev")
     move_files_to_another_directory(Path("static"), Path("public"))
-    generate_page(
-        from_path="content/index.md",
-        template_path="template.html",
-        dest_path="public/index.html",
+    generate_pages_recursive(
+        source_directory="content",
+        target_directory="public",
     )
     print(object_1.__repr__())
 
