@@ -268,28 +268,3 @@ def text_to_textnodes(text: str):
     nodes = split_nodes_bold_italic_code(nodes)
     nodes = split_nodes_image_link(nodes)
     return nodes
-
-
-def generate_page(from_path, template_path, dest_path):
-    print(f"Generating page from {from_path} to {dest_path} using {template_path}")
-
-    with open(from_path, "r") as markdown_file:
-        markdown_text = markdown_file.read()
-
-    markdown_list = markdown_to_html_node(markdown=markdown_text)
-    markdown_html_list = []
-
-    for markdown_item in markdown_list.children:
-        markdown_html_list.append(markdown_item.to_html())
-
-    page_title = extract_title(markdown_text)
-
-    with open(template_path, "r") as template_file:
-        template_text = template_file.read()
-
-    html_from_template = template_text.replace("{{ Title }}", page_title)
-    html_to_input = "\n".join(markdown_html_list)
-    html_from_template = html_from_template.replace("{{ Content }}", html_to_input)
-
-    with open(dest_path, "w") as html_file:
-        html_file.write(html_from_template)
