@@ -6,7 +6,7 @@ from src.textnode import TextNode, TextType, text_node_to_html_node
 IMAGES_RE = r"!\[(.*?)\]\((.*?)\)"
 LINK_RE = r"\[(.*?)\]\((.*?)\)"
 BOLD_RE = r"\*\*(.*?)\*\*"
-ITALIC_RE = r"\*(.*?)\*"
+ITALIC_RE = r"_(.*?)_"
 CODE_RE = r"`(.*?)`"
 
 
@@ -52,7 +52,7 @@ def split_nodes_bold_italic_code(nodes: list[TextNode]) -> list[TextNode]:
             finds = finds_bold
             text_type = TextType.BOLD
         elif finds_italic:
-            delimiter = "*"
+            delimiter = "_"
             finds = finds_italic
             text_type = TextType.ITALIC
 
